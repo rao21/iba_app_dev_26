@@ -5,8 +5,10 @@ import 'demos/basics_page.dart';
 import 'demos/input_page.dart';
 import 'demos/layout_page.dart';
 import 'demos/list_page.dart';
+import 'demos/more_page.dart';
 import 'demos/navigation_page.dart';
 import 'demos/state_page.dart';
+import 'pages/profile_page.dart';
 
 void main() {
   runApp(const WidgetGalleryApp());
@@ -100,6 +102,11 @@ const _sections = <GallerySection>[
     icon: Icons.auto_awesome,
     page: AdvancedPage(),
   ),
+  GallerySection(
+    label: 'More',
+    icon: Icons.widgets_outlined,
+    page: MorePage(),
+  ),
 ];
 
 /// Holds the selected section. A NavigationRail on wide screens, a
@@ -114,23 +121,56 @@ class GalleryHome extends StatefulWidget {
 }
 
 class _GalleryHomeState extends State<GalleryHome> {
+  /// Bottom bar: 0 = Home (the gallery), 1 = Profile.
+  int _tab = 0;
+
+  /// Which gallery section Home is showing. Chosen from the drawer, or from
+  /// the rail on a wide screen.
   int _index = 0;
 
   @override
   Widget build(BuildContext context) {
-    final section = _sections[_index];
+    final onHome = _tab == 0;
     final isWide = MediaQuery.sizeOf(context).width >= 720;
 
     // IndexedStack keeps every page alive, so a switch away and back does not
     // reset the counters and text fields the class is playing with.
-    final body = IndexedStack(
+    final gallery = IndexedStack(
       index: _index,
       children: [for (final s in _sections) s.page],
     );
 
+    final home = isWide
+        ? Row(
+            children: [
+              // Seven sections can be taller than a short window — let the
+              // rail scroll instead of overflowing.
+              SingleChildScrollView(
+                child: IntrinsicHeight(
+                  child: NavigationRail(
+                    selectedIndex: _index,
+                    groupAlignment: -1,
+                    labelType: NavigationRailLabelType.all,
+                    onDestinationSelected: (i) => setState(() => _index = i),
+                    destinations: [
+                      for (final s in _sections)
+                        NavigationRailDestination(
+                          icon: Icon(s.icon),
+                          label: Text(s.label),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const VerticalDivider(width: 1),
+              Expanded(child: gallery),
+            ],
+          )
+        : gallery;
+
     return Scaffold(
       // The gallery's own Drawer — the widget from the Navigation section,
-      // doing its real job.
+      // doing its real job: picking which section Home shows.
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -158,9 +198,12 @@ class _GalleryHomeState extends State<GalleryHome> {
               ListTile(
                 leading: Icon(_sections[i].icon),
                 title: Text(_sections[i].label),
-                selected: i == _index,
+                selected: onHome && i == _index,
                 onTap: () {
-                  setState(() => _index = i);
+                  setState(() {
+                    _index = i;
+                    _tab = 0; // sections live on Home
+                  });
                   Navigator.pop(context); // close the drawer
                 },
               ),
@@ -168,7 +211,9 @@ class _GalleryHomeState extends State<GalleryHome> {
         ),
       ),
       appBar: AppBar(
-        title: Text('Widget Gallery · ${section.label}'),
+        title: Text(
+          onHome ? 'Widget Gallery · ${_sections[_index].label}' : 'Profile',
+        ),
         actions: [
           IconButton(
             onPressed: widget.onToggleTheme,
@@ -177,37 +222,23 @@ class _GalleryHomeState extends State<GalleryHome> {
           ),
         ],
       ),
-      body: isWide
-          ? Row(
-              children: [
-                NavigationRail(
-                  selectedIndex: _index,
-                  groupAlignment: -1,
-                  labelType: NavigationRailLabelType.all,
-                  onDestinationSelected: (i) => setState(() => _index = i),
-                  destinations: [
-                    for (final s in _sections)
-                      NavigationRailDestination(
-                        icon: Icon(s.icon),
-                        label: Text(s.label),
-                      ),
-                  ],
-                ),
-                const VerticalDivider(width: 1),
-                Expanded(child: body),
-              ],
-            )
-          : body,
-      bottomNavigationBar: isWide
-          ? null
-          : NavigationBar(
-              selectedIndex: _index,
-              onDestinationSelected: (i) => setState(() => _index = i),
-              destinations: [
-                for (final s in _sections)
-                  NavigationDestination(icon: Icon(s.icon), label: s.label),
-              ],
-            ),
+      body: onHome ? home : const ProfilePage(),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _tab,
+        onDestinationSelected: (i) => setState(() => _tab = i),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
     );
   }
 }
