@@ -1,122 +1,162 @@
 import 'package:flutter/material.dart';
 
+import 'demos/basics_page.dart';
+import 'demos/input_page.dart';
+import 'demos/layout_page.dart';
+import 'demos/list_page.dart';
+import 'demos/state_page.dart';
+
 void main() {
-  runApp(const MyApp());
+  runApp(const WidgetGalleryApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+/// Lecture 01 companion app: every widget we cover, running, with the code
+/// that produced it one tap away.
+class WidgetGalleryApp extends StatefulWidget {
+  const WidgetGalleryApp({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<WidgetGalleryApp> createState() => _WidgetGalleryAppState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _WidgetGalleryAppState extends State<WidgetGalleryApp> {
+  ThemeMode _themeMode = ThemeMode.system;
 
-  void _incrementCounter() {
+  void _toggleTheme() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _themeMode =
+          _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+    return MaterialApp(
+      title: 'Widget Gallery',
+      debugShowCheckedModeBanner: false,
+      themeMode: _themeMode,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.indigo,
+          brightness: Brightness.dark,
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+      home: GalleryHome(onToggleTheme: _toggleTheme),
+    );
+  }
+}
+
+/// One section of the gallery.
+class GallerySection {
+  const GallerySection({
+    required this.label,
+    required this.icon,
+    required this.page,
+  });
+
+  final String label;
+  final IconData icon;
+  final Widget page;
+}
+
+const _sections = <GallerySection>[
+  GallerySection(
+    label: 'Basics',
+    icon: Icons.text_fields,
+    page: BasicsPage(),
+  ),
+  GallerySection(
+    label: 'Layout',
+    icon: Icons.dashboard_outlined,
+    page: LayoutPage(),
+  ),
+  GallerySection(
+    label: 'Input',
+    icon: Icons.touch_app_outlined,
+    page: InputPage(),
+  ),
+  GallerySection(
+    label: 'Lists',
+    icon: Icons.list_alt,
+    page: ListPage(),
+  ),
+  GallerySection(
+    label: 'State',
+    icon: Icons.sync,
+    page: StatePage(),
+  ),
+];
+
+/// Holds the selected section. A NavigationRail on wide screens, a
+/// NavigationBar on phones — same content either way.
+class GalleryHome extends StatefulWidget {
+  const GalleryHome({super.key, required this.onToggleTheme});
+
+  final VoidCallback onToggleTheme;
+
+  @override
+  State<GalleryHome> createState() => _GalleryHomeState();
+}
+
+class _GalleryHomeState extends State<GalleryHome> {
+  int _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final section = _sections[_index];
+    final isWide = MediaQuery.sizeOf(context).width >= 720;
+
+    // IndexedStack keeps every page alive, so a switch away and back does not
+    // reset the counters and text fields the class is playing with.
+    final body = IndexedStack(
+      index: _index,
+      children: [for (final s in _sections) s.page],
+    );
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Widget Gallery · ${section.label}'),
+        actions: [
+          IconButton(
+            onPressed: widget.onToggleTheme,
+            icon: const Icon(Icons.brightness_6_outlined),
+            tooltip: 'Toggle light and dark',
+          ),
+        ],
       ),
+      body: isWide
+          ? Row(
+              children: [
+                NavigationRail(
+                  selectedIndex: _index,
+                  labelType: NavigationRailLabelType.all,
+                  onDestinationSelected: (i) => setState(() => _index = i),
+                  destinations: [
+                    for (final s in _sections)
+                      NavigationRailDestination(
+                        icon: Icon(s.icon),
+                        label: Text(s.label),
+                      ),
+                  ],
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(child: body),
+              ],
+            )
+          : body,
+      bottomNavigationBar: isWide
+          ? null
+          : NavigationBar(
+              selectedIndex: _index,
+              onDestinationSelected: (i) => setState(() => _index = i),
+              destinations: [
+                for (final s in _sections)
+                  NavigationDestination(icon: Icon(s.icon), label: s.label),
+              ],
+            ),
     );
   }
 }
