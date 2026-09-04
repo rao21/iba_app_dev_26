@@ -98,127 +98,182 @@ const student = Student(
   ],
 );
 
-/// The Profile tab: a header, three stats, and the semester's courses —
-/// built only from widgets covered in the gallery.
+/// The Profile tab: an animated SliverAppBar that collapses from a full
+/// portrait header down to a plain title bar, then three stats and the
+/// semester's courses — built only from widgets covered in the gallery.
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key, this.data = student});
+  const ProfilePage({super.key, this.data = student, this.onToggleTheme});
 
   final Student data;
+
+  /// Shown as an action on the collapsed bar. Optional so the page still
+  /// works when opened on its own, outside the gallery shell.
+  final VoidCallback? onToggleTheme;
+
+  static const _expandedHeight = 260.0;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 24),
-      children: [
-        // Header
-        Container(
-          width: double.infinity,
-          color: scheme.primaryContainer,
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 34,
-                backgroundColor: scheme.primary,
-                child: Text(
-                  data.initials,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: scheme.onPrimary,
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          expandedHeight: _expandedHeight,
+          pinned: true, // stays on screen, collapsed, once scrolled past
+          stretch: true, // overscroll at the top gently stretches the header
+          title: Text(data.name), // only visible once collapsed
+          actions: [
+            if (onToggleTheme != null)
+              IconButton(
+                onPressed: onToggleTheme,
+                icon: const Icon(Icons.brightness_6_outlined),
+                tooltip: 'Toggle light and dark',
+              ),
+          ],
+          flexibleSpace: FlexibleSpaceBar(
+            stretchModes: const [
+              StretchMode.zoomBackground,
+              StretchMode.blurBackground,
+            ],
+            // Fades the plain title above out as the portrait fades in, so
+            // the two never overlap mid-collapse.
+            titlePadding: EdgeInsets.zero,
+            background: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [scheme.primary, scheme.primaryContainer],
+                ),
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 56, 20, 20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Hero(
+                        tag: 'profile-avatar',
+                        child: CircleAvatar(
+                          radius: 36,
+                          backgroundColor: scheme.onPrimary,
+                          child: Text(
+                            data.initials,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: scheme.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        data.name,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: scheme.onPrimary,
+                        ),
+                      ),
+                      Text(
+                        '${data.programme} · ${data.batch}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: scheme.onPrimary.withValues(alpha: 0.85),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          Chip(
+                            label: Text('Roll ${data.rollNumber}'),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          Chip(
+                            label: Text('Semester ${data.semester}'),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(data.name, style: theme.textTheme.titleLarge),
-                    Text(
-                      '${data.programme} · ${data.batch}',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        Chip(
-                          label: Text('Roll ${data.rollNumber}'),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        Chip(
-                          label: Text('Semester ${data.semester}'),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
         ),
 
         // Stats
-        Padding(
+        SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Row(
-            children: [
-              _Stat(label: 'CGPA', value: data.cgpa.toStringAsFixed(2)),
-              _Stat(label: 'Credit hours', value: '${data.creditHours}'),
-              _Stat(label: 'Courses', value: '${data.courses.length}'),
-            ],
-          ),
-        ),
-
-        // Contact
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Card(
-            margin: EdgeInsets.zero,
-            child: Column(
+          sliver: SliverToBoxAdapter(
+            child: Row(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.mail_outline),
-                  title: const Text('Email'),
-                  subtitle: Text(data.email),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.badge_outlined),
-                  title: const Text('Roll number'),
-                  subtitle: Text(data.rollNumber),
-                ),
+                _Stat(label: 'CGPA', value: data.cgpa.toStringAsFixed(2)),
+                _Stat(label: 'Credit hours', value: '${data.creditHours}'),
+                _Stat(label: 'Courses', value: '${data.courses.length}'),
               ],
             ),
           ),
         ),
 
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-          child: Text('This semester', style: theme.textTheme.titleMedium),
-        ),
-
-        // Courses — a plain for-loop because the list is short and already
-        // inside a scrolling ListView.
-        for (final course in data.courses)
-          ListTile(
-            leading: CircleAvatar(
-              backgroundColor: scheme.secondaryContainer,
-              child: Text(
-                course.grade,
-                style: TextStyle(
-                  color: scheme.onSecondaryContainer,
-                  fontSize: 13,
-                ),
+        // Contact
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          sliver: SliverToBoxAdapter(
+            child: Card(
+              margin: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.mail_outline),
+                    title: const Text('Email'),
+                    subtitle: Text(data.email),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.badge_outlined),
+                    title: const Text('Roll number'),
+                    subtitle: Text(data.rollNumber),
+                  ),
+                ],
               ),
             ),
-            title: Text(course.title),
-            subtitle: Text('${course.code} · ${course.instructor}'),
-            trailing: Text('${course.credits} cr'),
           ),
+        ),
+
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+          sliver: SliverToBoxAdapter(
+            child: Text('This semester', style: theme.textTheme.titleMedium),
+          ),
+        ),
+
+        // Courses — SliverList.builder so the row widgets are only built as
+        // they scroll near the viewport, same as ListView.builder would.
+        SliverList.builder(
+          itemCount: data.courses.length,
+          itemBuilder: (context, i) {
+            final course = data.courses[i];
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundColor: scheme.secondaryContainer,
+                child: Text(
+                  course.grade,
+                  style: TextStyle(
+                    color: scheme.onSecondaryContainer,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              title: Text(course.title),
+              subtitle: Text('${course.code} · ${course.instructor}'),
+              trailing: Text('${course.credits} cr'),
+            );
+          },
+        ),
+
+        const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
       ],
     );
   }

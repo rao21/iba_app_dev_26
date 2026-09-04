@@ -36,8 +36,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Profile'), findsWidgets);
-    expect(find.text('Rao Noman'), findsOneWidget);
+    // Appears twice: the collapsed SliverAppBar title and the expanded header.
+    expect(find.text('Rao Noman'), findsWidgets);
     expect(find.text('3.62'), findsOneWidget); // CGPA stat
+
+    // The course list sits below the fold on a short test window — scroll
+    // the SliverAppBar out of the way to reach it.
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
+    await tester.pumpAndSettle();
     expect(find.text('App Development'), findsOneWidget); // a course row
   });
 

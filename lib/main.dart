@@ -210,19 +210,23 @@ class _GalleryHomeState extends State<GalleryHome> {
           ],
         ),
       ),
-      appBar: AppBar(
-        title: Text(
-          onHome ? 'Widget Gallery · ${_sections[_index].label}' : 'Profile',
-        ),
-        actions: [
-          IconButton(
-            onPressed: widget.onToggleTheme,
-            icon: const Icon(Icons.brightness_6_outlined),
-            tooltip: 'Toggle light and dark',
-          ),
-        ],
-      ),
-      body: onHome ? home : const ProfilePage(),
+      // Profile draws its own animated SliverAppBar, so only Home uses the
+      // plain top bar.
+      appBar: onHome
+          ? AppBar(
+              title: Text('Widget Gallery · ${_sections[_index].label}'),
+              actions: [
+                IconButton(
+                  onPressed: widget.onToggleTheme,
+                  icon: const Icon(Icons.brightness_6_outlined),
+                  tooltip: 'Toggle light and dark',
+                ),
+              ],
+            )
+          : null,
+      body: onHome
+          ? home
+          : ProfilePage(onToggleTheme: widget.onToggleTheme),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
