@@ -15,6 +15,18 @@ void main() {
     expect(find.text('Widget Gallery · State'), findsOneWidget);
   });
 
+  testWidgets('the drawer switches sections', (tester) async {
+    await tester.pumpWidget(const WidgetGalleryApp());
+
+    await tester.tap(find.byTooltip('Open navigation menu'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ListTile, 'Advanced'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Widget Gallery \u00b7 Advanced'), findsOneWidget);
+  });
+
   testWidgets('setState demo increments, the plain field does not', (tester) async {
     await tester.pumpWidget(const WidgetGalleryApp());
     await tester.tap(find.text('State').last);

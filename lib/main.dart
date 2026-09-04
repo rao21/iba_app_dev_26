@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'demos/advanced_page.dart';
 import 'demos/basics_page.dart';
 import 'demos/input_page.dart';
 import 'demos/layout_page.dart';
 import 'demos/list_page.dart';
+import 'demos/navigation_page.dart';
 import 'demos/state_page.dart';
 
 void main() {
@@ -88,6 +90,16 @@ const _sections = <GallerySection>[
     icon: Icons.sync,
     page: StatePage(),
   ),
+  GallerySection(
+    label: 'Navigation',
+    icon: Icons.menu_open,
+    page: NavigationPage(),
+  ),
+  GallerySection(
+    label: 'Advanced',
+    icon: Icons.auto_awesome,
+    page: AdvancedPage(),
+  ),
 ];
 
 /// Holds the selected section. A NavigationRail on wide screens, a
@@ -117,6 +129,44 @@ class _GalleryHomeState extends State<GalleryHome> {
     );
 
     return Scaffold(
+      // The gallery's own Drawer — the widget from the Navigation section,
+      // doing its real job.
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+              ),
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Widget Gallery',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const Text('App Development 2026 · Lecture 01'),
+                  ],
+                ),
+              ),
+            ),
+            for (var i = 0; i < _sections.length; i++)
+              ListTile(
+                leading: Icon(_sections[i].icon),
+                title: Text(_sections[i].label),
+                selected: i == _index,
+                onTap: () {
+                  setState(() => _index = i);
+                  Navigator.pop(context); // close the drawer
+                },
+              ),
+          ],
+        ),
+      ),
       appBar: AppBar(
         title: Text('Widget Gallery · ${section.label}'),
         actions: [
@@ -132,6 +182,7 @@ class _GalleryHomeState extends State<GalleryHome> {
               children: [
                 NavigationRail(
                   selectedIndex: _index,
+                  groupAlignment: -1,
                   labelType: NavigationRailLabelType.all,
                   onDestinationSelected: (i) => setState(() => _index = i),
                   destinations: [
