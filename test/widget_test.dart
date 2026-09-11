@@ -89,10 +89,15 @@ void main() {
 
     expect(find.text('Server assigned id 101'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Done'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Add to list'));
     await tester.pumpAndSettle();
 
     expect(find.text('Class demo post'), findsOneWidget);
+    expect(find.text('Server created post #101'), findsOneWidget); // SnackBar
+
+    // Let the highlight-fade timer and the SnackBar's own timer run out
+    // before the test tears the widget tree down.
+    await tester.pump(const Duration(seconds: 5));
   });
 
   testWidgets('setState demo increments, the plain field does not', (tester) async {

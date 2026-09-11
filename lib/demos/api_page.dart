@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../models/post.dart';
 import '../services/posts_api.dart';
-import '../widgets/demo_card.dart';
+import '../widgets/api_widgets.dart';
 
-/// The API lecture: a real GET request rendered with FutureBuilder, and a
-/// real POST request that adds to the list once it comes back.
+/// Lecture 02: consuming a real REST API. GET renders a list through
+/// FutureBuilder; POST adds to it and the new row is shown coming back from
+/// the server, not just appended locally.
 class ApiPage extends StatefulWidget {
   const ApiPage({super.key, PostsApi? api}) : _api = api;
 
@@ -17,7 +18,11 @@ class ApiPage extends StatefulWidget {
 
 class _ApiPageState extends State<ApiPage> {
   late final PostsApi _api = widget._api ?? PostsApi();
-  late Future<List<Post>> _postsFuture;
+  late Future<ApiResponse<List<Post>>> _postsFuture;
+
+  /// The id of a post that just arrived, so its row can be highlighted for a
+  /// moment before fading back to normal.
+  int? _justAddedId;
 
   @override
   void initState() {
@@ -26,8 +31,10 @@ class _ApiPageState extends State<ApiPage> {
     _postsFuture = _api.fetchPosts();
   }
 
-  void _refresh() {
-    setState(() => _postsFuture = _api.fetchPosts());
+  Future<void> _refresh() async {
+    final response = await _api.fetchPosts();
+    if (!mounted) return;
+    setState(() => _postsFuture = Future.value(response));
   }
 
   Future<void> _openComposer() async {
@@ -40,10 +47,26 @@ class _ApiPageState extends State<ApiPage> {
 
     if (created == null || !mounted) return;
 
-    // Prepend the freshly-posted item so the round trip is visible without
-    // waiting on a second GET.
+    final current = await _postsFuture;
+    if (!mounted) return;
+
     setState(() {
-      _postsFuture = _postsFuture.then((posts) => [created, ...posts]);
+      _postsFuture = Future.value(
+        ApiResponse(
+          statusCode: current.statusCode,
+          data: [created, ...current.data],
+        ),
+      );
+      _justAddedId = created.id;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Server created post #${created.id}')),
+    );
+
+    // The highlight is a teaching cue, not permanent state — let it fade.
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _justAddedId = null);
     });
   }
 
@@ -53,104 +76,157 @@ class _ApiPageState extends State<ApiPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openComposer,
         icon: const Icon(Icons.add),
-        label: const Text('POST'),
+        label: const Text('New post'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        children: [
-          DemoCard(
-            title: 'GET — a list from the network',
-            note: 'FutureBuilder rebuilds around whatever state the Future is '
-                'in right now: waiting, error, or data. Handle all three.',
-            code: '''
-Future<List<Post>> _postsFuture = api.fetchPosts();
-
-FutureBuilder<List<Post>>(
-  future: _postsFuture,
-  builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-      return const CircularProgressIndicator();
-    }
-    if (snapshot.hasError) {
-      return Text('Something went wrong: \${snapshot.error}');
-    }
-    final posts = snapshot.data!;
-    return ListView.builder(
-      itemCount: posts.length,
-      itemBuilder: (context, i) => ListTile(title: Text(posts[i].title)),
-    );
-  },
-)''',
-            child: SizedBox(
-              height: 340,
-              child: FutureBuilder<List<Post>>(
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 96),
+          children: [
+            const LectureBanner(
+              number: '02',
+              title: 'Talking to an API',
+              summary:
+                  'Every request is a method plus an address. GET asks for '
+                  'data; POST sends new data. The reply is a status code '
+                  'plus a body — this screen shows both, live.',
+            ),
+            const SectionHeading(title: 'Reading a list — GET'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: FutureBuilder<ApiResponse<List<Post>>>(
                 future: _postsFuture,
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return _ErrorState(
-                      message: '${snapshot.error}',
-                      onRetry: _refresh,
-                    );
-                  }
-
-                  final posts = snapshot.data ?? const [];
-                  return ListView.separated(
-                    itemCount: posts.length,
-                    separatorBuilder: (context, i) => const Divider(height: 1),
-                    itemBuilder: (context, i) {
-                      final post = posts[i];
-                      return ListTile(
-                        leading: CircleAvatar(child: Text('${post.id}')),
-                        title: Text(
-                          post.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Text(
-                          post.body,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    },
+                  final status = snapshot.data?.statusCode;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      RequestBar(
+                        method: 'GET',
+                        path: '/posts',
+                        status: status,
+                      ),
+                      const SizedBox(height: 12),
+                      _GetBody(
+                        snapshot: snapshot,
+                        onRetry: _refresh,
+                        highlightId: _justAddedId,
+                      ),
+                    ],
                   );
                 },
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-            child: OutlinedButton.icon(
-              onPressed: _refresh,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Fetch again'),
+            const SectionHeading(title: 'Sending data — POST'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const MethodBadge('POST'),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Tap "New post" below — it opens a form, sends it, '
+                        'and the reply lands at the top of the list above.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          const DemoCard(
-            title: 'POST — sending data back',
-            note: 'Tap the POST button below the list. JSONPlaceholder is a '
-                'fake API: it does not really save the post, but it echoes it '
-                'back with a new id, which is enough to see the whole round '
-                'trip — request, wait, response.',
-            code: '''
-Future<Post> createPost({required String title, required String body}) async {
-  final response = await client.post(
-    Uri.parse('https://jsonplaceholder.typicode.com/posts'),
-    headers: {'Content-Type': 'application/json; charset=UTF-8'},
-    body: jsonEncode({'userId': 1, 'title': title, 'body': body}),
-  );
-
-  if (response.statusCode != 201) {
-    throw Exception('POST /posts failed: \${response.statusCode}');
+          ],
+        ),
+      ),
+    );
   }
-  return Post.fromJson(jsonDecode(response.body));
-}''',
-            child: Swatch('tap the POST button, bottom right', height: 40),
-          ),
-        ],
+}
+
+/// The body of the GET section: one branch per FutureBuilder state.
+class _GetBody extends StatelessWidget {
+  const _GetBody({
+    required this.snapshot,
+    required this.onRetry,
+    required this.highlightId,
+  });
+
+  final AsyncSnapshot<ApiResponse<List<Post>>> snapshot;
+  final Future<void> Function() onRetry;
+
+  /// The post that just came back from a POST — its row gets a brief tint
+  /// so "the reply landed at the top of the list" is visible, not just true.
+  final int? highlightId;
+
+  @override
+  Widget build(BuildContext context) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 32),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (snapshot.hasError) {
+      return _ErrorState(message: '${snapshot.error}', onRetry: onRetry);
+    }
+
+    final posts = snapshot.data!.data;
+    return Column(
+      children: [
+        for (final post in posts)
+          _PostCard(post: post, highlighted: post.id == highlightId),
+      ],
+    );
+  }
+}
+
+/// One row in the list. [highlighted] briefly tints a post that just arrived
+/// from a POST, so the round trip reads as "this one just came back",
+/// not just another row that was always there.
+class _PostCard extends StatelessWidget {
+  const _PostCard({required this.post, required this.highlighted});
+
+  final Post post;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: highlighted ? scheme.tertiaryContainer : scheme.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: highlighted ? scheme.tertiary : scheme.outlineVariant,
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        leading: CircleAvatar(
+          backgroundColor: scheme.secondaryContainer,
+          child: Text('${post.id}'),
+        ),
+        title: Text(
+          post.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          post.body,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing:
+            highlighted ? Icon(Icons.fiber_new, color: scheme.tertiary) : null,
       ),
     );
   }
@@ -170,7 +246,7 @@ class _ComposeSheet extends StatefulWidget {
 class _ComposeSheetState extends State<_ComposeSheet> {
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
-  Future<Post>? _submission;
+  Future<ApiResponse<Post>>? _submission;
 
   @override
   void dispose() {
@@ -202,7 +278,13 @@ class _ComposeSheetState extends State<_ComposeSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('New post', style: Theme.of(context).textTheme.titleLarge),
+          Row(
+            children: [
+              const MethodBadge('POST'),
+              const SizedBox(width: 10),
+              Text('New post', style: Theme.of(context).textTheme.titleLarge),
+            ],
+          ),
           const SizedBox(height: 16),
           TextField(
             controller: _titleController,
@@ -230,7 +312,7 @@ class _ComposeSheetState extends State<_ComposeSheet> {
               label: const Text('POST /posts'),
             )
           else
-            FutureBuilder<Post>(
+            FutureBuilder<ApiResponse<Post>>(
               future: _submission,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -248,26 +330,33 @@ class _ComposeSheetState extends State<_ComposeSheet> {
                 if (snapshot.hasError) {
                   return _ErrorState(
                     message: '${snapshot.error}',
-                    onRetry: () => setState(() => _submission = null),
+                    onRetry: () async =>
+                        setState(() => _submission = null),
                   );
                 }
 
-                final post = snapshot.data!;
+                final response = snapshot.data!;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    RequestBar(
+                      method: 'POST',
+                      path: '/posts',
+                      status: response.statusCode,
+                    ),
+                    const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.secondaryContainer,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text('Server assigned id ${post.id}'),
+                      child: Text('Server assigned id ${response.data.id}'),
                     ),
                     const SizedBox(height: 12),
                     FilledButton(
-                      onPressed: () => Navigator.pop(context, post),
-                      child: const Text('Done'),
+                      onPressed: () => Navigator.pop(context, response.data),
+                      child: const Text('Add to list'),
                     ),
                   ],
                 );
@@ -285,7 +374,7 @@ class _ErrorState extends StatelessWidget {
   const _ErrorState({required this.message, required this.onRetry});
 
   final String message;
-  final VoidCallback onRetry;
+  final Future<void> Function() onRetry;
 
   @override
   Widget build(BuildContext context) {
