@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'demos/advanced_page.dart';
+import 'demos/api_page.dart';
 import 'demos/basics_page.dart';
 import 'demos/input_page.dart';
 import 'demos/layout_page.dart';
@@ -101,6 +102,11 @@ const _sections = <GallerySection>[
     label: 'Advanced',
     icon: Icons.auto_awesome,
     page: AdvancedPage(),
+  ),
+  GallerySection(
+    label: 'API',
+    icon: Icons.cloud_outlined,
+    page: ApiPage(),
   ),
   GallerySection(
     label: 'More',
