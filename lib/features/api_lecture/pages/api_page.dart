@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../shared/widgets/http_badges.dart';
+import '../../../shared/widgets/lecture_ui.dart';
 import '../models/post.dart';
 import '../services/posts_api.dart';
-import '../widgets/api_widgets.dart';
 
 /// Lecture 02: consuming a real REST API. GET renders a list through
 /// FutureBuilder; POST adds to it and the new row is shown coming back from

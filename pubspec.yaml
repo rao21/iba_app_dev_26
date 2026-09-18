@@ -18,6 +18,10 @@ dependencies:
   # needs to render around them.
   http: ^1.2.2
 
+  # Declarative, URL-based routing — the Navigator 2.0 intro in the
+  # navigation lecture.
+  go_router: ^14.6.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

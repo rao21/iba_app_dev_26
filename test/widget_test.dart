@@ -7,11 +7,76 @@ import 'package:http/testing.dart';
 
 import 'package:iba_app_dev_26/features/api_lecture/pages/api_page.dart';
 import 'package:iba_app_dev_26/features/api_lecture/services/posts_api.dart';
+import 'package:iba_app_dev_26/features/navigation_lecture/pages/post_detail_page.dart';
+import 'package:iba_app_dev_26/features/navigation_lecture/pages/routing_lecture_page.dart';
 import 'package:iba_app_dev_26/main.dart';
+
+/// A fake backend for every full-app test below.
+///
+/// IndexedStack keeps every gallery section alive from the moment the app
+/// starts, so the API and Routing lectures fire real requests as soon as
+/// `pumpWidget` runs — a real `PostsApi()` would reach for the network in
+/// every single test in this file otherwise. This one answers GET/POST/PATCH
+/// for `/posts` in whatever shape jsonplaceholder itself would.
+PostsApi _fakeApi() {
+  final client = MockClient((request) async {
+    final segments = request.url.pathSegments; // ['posts'] or ['posts', '1', ...]
+
+    if (request.method == 'POST') {
+      final sent = jsonDecode(request.body) as Map<String, dynamic>;
+      return http.Response(jsonEncode({...sent, 'id': 101}), 201);
+    }
+    if (request.method == 'PATCH') {
+      final id = int.parse(segments[1]);
+      final sent = jsonDecode(request.body) as Map<String, dynamic>;
+      return http.Response(
+        jsonEncode({'id': id, 'userId': 1, 'body': 'Body $id', ...sent}),
+        200,
+      );
+    }
+    if (segments.length == 3 && segments[2] == 'comments') {
+      final postId = int.parse(segments[1]);
+      return http.Response(
+        jsonEncode([
+          {
+            'id': 1,
+            'postId': postId,
+            'name': 'A reader',
+            'email': 'reader@example.com',
+            'body': 'Nice post!',
+          },
+        ]),
+        200,
+      );
+    }
+    if (segments.length == 2) {
+      final id = int.parse(segments[1]);
+      return http.Response(
+        jsonEncode({
+          'id': id,
+          'userId': 1,
+          'title': 'Post $id',
+          'body': 'Body of post $id',
+        }),
+        200,
+      );
+    }
+
+    // GET /posts — the list.
+    return http.Response(
+      jsonEncode([
+        {'id': 1, 'userId': 1, 'title': 'First post', 'body': 'Hello API'},
+        {'id': 2, 'userId': 1, 'title': 'Second post', 'body': 'More data'},
+      ]),
+      200,
+    );
+  });
+  return PostsApi(client: client);
+}
 
 void main() {
   testWidgets('gallery opens on Basics and switches sections', (tester) async {
-    await tester.pumpWidget(const WidgetGalleryApp());
+    await tester.pumpWidget(WidgetGalleryApp(api: _fakeApi()));
     await tester.pump(const Duration(seconds: 1)); // flush Advanced's FutureBuilder timer
 
     expect(find.text('Widget Gallery · Basics'), findsOneWidget);
@@ -23,7 +88,8 @@ void main() {
   });
 
   testWidgets('the drawer switches sections', (tester) async {
-    await tester.pumpWidget(const WidgetGalleryApp());
+    await tester.pumpWidget(WidgetGalleryApp(api: _fakeApi()));
+    await tester.pump(const Duration(seconds: 1));
 
     await tester.tap(find.byTooltip('Open navigation menu'));
     await tester.pumpAndSettle();
@@ -35,7 +101,7 @@ void main() {
   });
 
   testWidgets('the Profile tab shows the student data', (tester) async {
-    await tester.pumpWidget(const WidgetGalleryApp());
+    await tester.pumpWidget(WidgetGalleryApp(api: _fakeApi()));
     await tester.pump(const Duration(seconds: 1));
 
     await tester.tap(find.widgetWithText(NavigationDestination, 'Profile'));
@@ -100,8 +166,69 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
   });
 
+  testWidgets('push, edit and pop carries data both ways', (tester) async {
+    final api = _fakeApi();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: RoutingLecturePage(api: api),
+        onGenerateRoute: (settings) {
+          if (settings.name == RoutingLecturePage.routeName) {
+            final postId = settings.arguments as int;
+            return MaterialPageRoute(
+              builder: (context) => PostDetailPage(postId: postId, api: api),
+            );
+          }
+          return null;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The lecture banner, diagram and two code blocks push the post list
+    // off the first screen — scroll down to reach it before tapping.
+    await tester.dragUntilVisible(
+      find.text('First post'),
+      find.byType(ListView).first,
+      const Offset(0, -300),
+    );
+    await tester.pumpAndSettle();
+
+    // Technique 1: Navigator.push, id and title passed through the
+    // constructor.
+    await tester.tap(find.text('First post'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('First post'), findsWidgets); // AppBar title + list row underneath
+    expect(find.text('Nice post!'), findsOneWidget); // a fetched comment
+
+    // Edit the title, save, and see it come back via pop().
+    await tester.tap(find.byTooltip('Edit title'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'Edited by a student');
+    await tester.tap(find.text('Save and go back'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edited by a student'), findsOneWidget); // new AppBar title
+    expect(find.textContaining('PATCH returned 200'), findsOneWidget); // SnackBar
+
+    await tester.pump(const Duration(seconds: 5)); // flush the SnackBar's timer
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+
+    // Technique 2: the same trip again, this time via a named route.
+    await tester.tap(find.widgetWithText(TextButton, 'named').first);
+    await tester.pumpAndSettle();
+
+    // No initialTitle travels through a named route's arguments — just the
+    // id — so the AppBar falls back to this placeholder until the GET
+    // resolves.
+    expect(find.text('Post #1'), findsOneWidget);
+  });
+
   testWidgets('setState demo increments, the plain field does not', (tester) async {
-    await tester.pumpWidget(const WidgetGalleryApp());
+    await tester.pumpWidget(WidgetGalleryApp(api: _fakeApi()));
     await tester.pump(const Duration(seconds: 1));
     await tester.tap(find.byTooltip('Open navigation menu'));
     await tester.pumpAndSettle();

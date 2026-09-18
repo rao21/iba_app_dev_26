@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'features/api_lecture/pages/api_page.dart';
+import 'features/api_lecture/services/posts_api.dart';
+import 'features/navigation_lecture/pages/post_detail_page.dart';
+import 'features/navigation_lecture/pages/routing_lecture_page.dart';
 import 'features/profile/pages/profile_page.dart';
 import 'features/widgets_lecture/pages/advanced_page.dart';
 import 'features/widgets_lecture/pages/basics_page.dart';
@@ -18,13 +21,18 @@ void main() {
 /// Lecture 01 companion app: every widget we cover, running, with the code
 /// that produced it one tap away.
 class WidgetGalleryApp extends StatefulWidget {
-  const WidgetGalleryApp({super.key});
+  const WidgetGalleryApp({super.key, PostsApi? api}) : _api = api;
+
+  /// Lets a test hand every API-backed section the same fake client instead
+  /// of each one reaching for the real network on its own.
+  final PostsApi? _api;
 
   @override
   State<WidgetGalleryApp> createState() => _WidgetGalleryAppState();
 }
 
 class _WidgetGalleryAppState extends State<WidgetGalleryApp> {
+  late final PostsApi _api = widget._api ?? PostsApi();
   ThemeMode _themeMode = ThemeMode.system;
 
   void _toggleTheme() {
@@ -49,7 +57,19 @@ class _WidgetGalleryAppState extends State<WidgetGalleryApp> {
           brightness: Brightness.dark,
         ),
       ),
-      home: GalleryHome(onToggleTheme: _toggleTheme),
+      home: GalleryHome(api: _api, onToggleTheme: _toggleTheme),
+      // The named-route half of Lecture 03: one place that maps an address
+      // to a screen, so Navigator.pushNamed elsewhere never has to know how
+      // PostDetailPage is built.
+      onGenerateRoute: (settings) {
+        if (settings.name == RoutingLecturePage.routeName) {
+          final postId = settings.arguments as int;
+          return MaterialPageRoute(
+            builder: (context) => PostDetailPage(postId: postId, api: _api),
+          );
+        }
+        return null;
+      },
     );
   }
 }
@@ -67,59 +87,67 @@ class GallerySection {
   final Widget page;
 }
 
-const _sections = <GallerySection>[
-  GallerySection(
-    label: 'Basics',
-    icon: Icons.text_fields,
-    page: BasicsPage(),
-  ),
-  GallerySection(
-    label: 'Layout',
-    icon: Icons.dashboard_outlined,
-    page: LayoutPage(),
-  ),
-  GallerySection(
-    label: 'Input',
-    icon: Icons.touch_app_outlined,
-    page: InputPage(),
-  ),
-  GallerySection(
-    label: 'Lists',
-    icon: Icons.list_alt,
-    page: ListPage(),
-  ),
-  GallerySection(
-    label: 'State',
-    icon: Icons.sync,
-    page: StatePage(),
-  ),
-  GallerySection(
-    label: 'Navigation',
-    icon: Icons.menu_open,
-    page: NavigationPage(),
-  ),
-  GallerySection(
-    label: 'Advanced',
-    icon: Icons.auto_awesome,
-    page: AdvancedPage(),
-  ),
-  GallerySection(
-    label: 'API',
-    icon: Icons.cloud_outlined,
-    page: ApiPage(),
-  ),
-  GallerySection(
-    label: 'More',
-    icon: Icons.widgets_outlined,
-    page: MorePage(),
-  ),
-];
+/// Every section of the gallery. Only the two API-backed lectures need
+/// [api] — everyone else is a `const` page with nothing to inject.
+List<GallerySection> _buildSections(PostsApi api) => [
+      const GallerySection(
+        label: 'Basics',
+        icon: Icons.text_fields,
+        page: BasicsPage(),
+      ),
+      const GallerySection(
+        label: 'Layout',
+        icon: Icons.dashboard_outlined,
+        page: LayoutPage(),
+      ),
+      const GallerySection(
+        label: 'Input',
+        icon: Icons.touch_app_outlined,
+        page: InputPage(),
+      ),
+      const GallerySection(
+        label: 'Lists',
+        icon: Icons.list_alt,
+        page: ListPage(),
+      ),
+      const GallerySection(
+        label: 'State',
+        icon: Icons.sync,
+        page: StatePage(),
+      ),
+      const GallerySection(
+        label: 'Navigation',
+        icon: Icons.menu_open,
+        page: NavigationPage(),
+      ),
+      const GallerySection(
+        label: 'Advanced',
+        icon: Icons.auto_awesome,
+        page: AdvancedPage(),
+      ),
+      GallerySection(
+        label: 'API',
+        icon: Icons.cloud_outlined,
+        page: ApiPage(api: api),
+      ),
+      GallerySection(
+        label: 'Routing',
+        icon: Icons.alt_route,
+        page: RoutingLecturePage(api: api),
+      ),
+      const GallerySection(
+        label: 'More',
+        icon: Icons.widgets_outlined,
+        page: MorePage(),
+      ),
+    ];
 
 /// Holds the selected section. A NavigationRail on wide screens, a
 /// NavigationBar on phones — same content either way.
 class GalleryHome extends StatefulWidget {
-  const GalleryHome({super.key, required this.onToggleTheme});
+  const GalleryHome({super.key, required this.api, required this.onToggleTheme});
 
+  final PostsApi api;
   final VoidCallback onToggleTheme;
 
   @override
@@ -127,6 +155,10 @@ class GalleryHome extends StatefulWidget {
 }
 
 class _GalleryHomeState extends State<GalleryHome> {
+  /// Built once per widget.api so every section's IndexedStack slot keeps
+  /// its identity (and its state) across rebuilds.
+  late final _sections = _buildSections(widget.api);
+
   /// Bottom bar: 0 = Home (the gallery), 1 = Profile.
   int _tab = 0;
 

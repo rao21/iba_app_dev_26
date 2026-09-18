@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../models/comment.dart';
 import '../models/post.dart';
 
 /// A response paired with the status code it came back with — the two things
@@ -54,6 +55,51 @@ class PostsApi {
 
     if (response.statusCode != 201) {
       throw Exception('POST /posts failed: ${response.statusCode}');
+    }
+
+    final post = Post.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    return ApiResponse(statusCode: response.statusCode, data: post);
+  }
+
+  /// GET /posts/{id} — one post, fetched using the id a previous screen
+  /// handed this screen. This is the whole point of "passing data between
+  /// screens": the id travels, and this screen uses it to ask for its own
+  /// data instead of the caller doing that work up front.
+  Future<ApiResponse<Post>> fetchPost(int id) async {
+    final response = await _client.get(Uri.parse('$_base/$id'));
+
+    if (response.statusCode != 200) {
+      throw Exception('GET /posts/$id failed: ${response.statusCode}');
+    }
+
+    final post = Post.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    return ApiResponse(statusCode: response.statusCode, data: post);
+  }
+
+  /// GET /posts/{id}/comments — a nested resource, addressed by the same id.
+  Future<ApiResponse<List<Comment>>> fetchComments(int postId) async {
+    final response = await _client.get(Uri.parse('$_base/$postId/comments'));
+
+    if (response.statusCode != 200) {
+      throw Exception('GET /posts/$postId/comments failed: ${response.statusCode}');
+    }
+
+    final body = jsonDecode(response.body) as List<dynamic>;
+    final comments = body.cast<Map<String, dynamic>>().map(Comment.fromJson).toList();
+    return ApiResponse(statusCode: response.statusCode, data: comments);
+  }
+
+  /// PATCH /posts/{id} — the API call the "edit title, then come back" flow
+  /// makes once the edit screen has popped its result back to the caller.
+  Future<ApiResponse<Post>> updatePost(int id, {required String title}) async {
+    final response = await _client.patch(
+      Uri.parse('$_base/$id'),
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      body: jsonEncode({'title': title}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('PATCH /posts/$id failed: ${response.statusCode}');
     }
 
     final post = Post.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
