@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-import 'demos/advanced_page.dart';
-import 'demos/api_page.dart';
-import 'demos/basics_page.dart';
-import 'demos/input_page.dart';
-import 'demos/layout_page.dart';
-import 'demos/list_page.dart';
-import 'demos/more_page.dart';
-import 'demos/navigation_page.dart';
-import 'demos/state_page.dart';
-import 'pages/profile_page.dart';
+import 'features/api_lecture/pages/api_page.dart';
+import 'features/profile/pages/profile_page.dart';
+import 'features/widgets_lecture/pages/advanced_page.dart';
+import 'features/widgets_lecture/pages/basics_page.dart';
+import 'features/widgets_lecture/pages/input_page.dart';
+import 'features/widgets_lecture/pages/layout_page.dart';
+import 'features/widgets_lecture/pages/list_page.dart';
+import 'features/widgets_lecture/pages/more_page.dart';
+import 'features/widgets_lecture/pages/navigation_page.dart';
+import 'features/widgets_lecture/pages/state_page.dart';
 
 void main() {
   runApp(const WidgetGalleryApp());

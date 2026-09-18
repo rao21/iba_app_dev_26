@@ -5,9 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
-import 'package:iba_app_dev_26/demos/api_page.dart';
+import 'package:iba_app_dev_26/features/api_lecture/pages/api_page.dart';
+import 'package:iba_app_dev_26/features/api_lecture/services/posts_api.dart';
 import 'package:iba_app_dev_26/main.dart';
-import 'package:iba_app_dev_26/services/posts_api.dart';
 
 void main() {
   testWidgets('gallery opens on Basics and switches sections', (tester) async {
