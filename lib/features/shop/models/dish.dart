@@ -5,12 +5,14 @@ class Dish {
     required this.name,
     required this.price,
     required this.emoji,
+    this.image,
   });
 
   final int id;
   final String name;
   final int price;
   final String emoji;
+  final String? image; // photo link, optional
 
   // Turns one JSON object from menu.json into a Dish.
   factory Dish.fromJson(Map<String, dynamic> json) => Dish(
@@ -18,5 +20,6 @@ class Dish {
         name: json['name'] as String,
         price: json['price'] as int,
         emoji: json['emoji'] as String,
+        image: json['image'] as String?,
       );
 }

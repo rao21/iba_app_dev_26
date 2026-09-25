@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/cart_model.dart';
+import '../widgets/dish_image.dart';
 
 /// A second screen showing the SAME cart. Nothing is passed through the
 /// constructor — it just asks Provider.
@@ -22,10 +23,7 @@ class CartPage extends StatelessWidget {
             children: [
               for (final entry in cart.items.entries)
                 ListTile(
-                  leading: Text(
-                    entry.key.emoji,
-                    style: const TextStyle(fontSize: 28),
-                  ),
+                  leading: DishImage(dish: entry.key),
                   title: Text(entry.key.name),
                   subtitle: Text('Rs ${entry.key.price} each'),
                   trailing: Row(

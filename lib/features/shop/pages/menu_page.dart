@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/dish.dart';
 import '../providers/cart_model.dart';
+import '../widgets/dish_image.dart';
 import 'cart_page.dart';
 
 /// The menu screen. Add sends the dish to the shared CartModel.
@@ -23,7 +24,7 @@ class MenuPage extends StatelessWidget {
         itemBuilder: (context, index) {
           final dish = dishes[index];
           return ListTile(
-            leading: Text(dish.emoji, style: const TextStyle(fontSize: 28)),
+            leading: DishImage(dish: dish),
             title: Text(dish.name),
             subtitle: Text('Rs ${dish.price}'),
             trailing: FilledButton(

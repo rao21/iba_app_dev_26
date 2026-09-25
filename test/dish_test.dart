@@ -8,8 +8,10 @@ void main() {
   test('menu.json loads into Dish objects', () async {
     final dishes = await MenuRepository().load();
 
-    expect(dishes.length, 6);
+    expect(dishes.length, 8);
     expect(dishes.first.name, 'Biryani');
     expect(dishes.first.price, 350);
+    expect(dishes.first.image, isNull); // not every dish has a photo
+    expect(dishes.last.image, startsWith('https://'));
   });
 }
