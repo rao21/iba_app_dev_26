@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'features/shop/data/menu_repository.dart';
 import 'features/shop/models/dish.dart';
 import 'features/shop/pages/menu_page.dart';
+import 'features/shop/providers/cart_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,11 +19,18 @@ class ShopApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Desi Corner',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange)),
-      home: MenuPage(dishes: dishes),
+    // Put the CartModel ABOVE MaterialApp so every screen can reach the
+    // same cart. create: runs once, and Provider disposes it for us.
+    return ChangeNotifierProvider(
+      create: (context) => CartModel(),
+      child: MaterialApp(
+        title: 'Desi Corner',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+        ),
+        home: MenuPage(dishes: dishes),
+      ),
     );
   }
 }

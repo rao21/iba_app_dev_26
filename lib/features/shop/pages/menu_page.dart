@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/dish.dart';
+import '../providers/cart_model.dart';
 
-/// The menu screen. The Add button does nothing yet — that is the problem
-/// Provider is about to solve.
+/// The menu screen. Add sends the dish to the shared CartModel.
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key, required this.dishes});
 
@@ -22,7 +23,8 @@ class MenuPage extends StatelessWidget {
             title: Text(dish.name),
             subtitle: Text('Rs ${dish.price}'),
             trailing: FilledButton(
-              onPressed: () {},
+              // read = "do something once". Use it inside button presses.
+              onPressed: () => context.read<CartModel>().add(dish),
               child: const Text('Add'),
             ),
           );
