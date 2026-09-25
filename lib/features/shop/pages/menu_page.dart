@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/dish.dart';
 import '../providers/cart_model.dart';
+import 'cart_page.dart';
 
 /// The menu screen. Add sends the dish to the shared CartModel.
 class MenuPage extends StatelessWidget {
@@ -47,9 +48,13 @@ class CartBadge extends StatelessWidget {
     // watch = "redraw me whenever this changes". Use it inside build().
     final count = context.watch<CartModel>().count;
 
-    return Padding(
-      padding: const EdgeInsets.only(right: 12),
-      child: Badge(
+    return IconButton(
+      tooltip: 'Open cart',
+      onPressed: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const CartPage()),
+      ),
+      icon: Badge(
         isLabelVisible: count > 0,
         label: Text('$count'),
         child: const Icon(Icons.shopping_cart_outlined),

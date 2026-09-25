@@ -40,4 +40,23 @@ void main() {
 
     expect(find.text('2'), findsOneWidget); // badge, redrawn by context.watch
   });
+
+  testWidgets('the cart screen shows the same cart and its total', (tester) async {
+    await tester.pumpWidget(const ShopApp(dishes: _dishes));
+
+    await tester.tap(find.text('Add').first);
+    await tester.tap(find.text('Add').first);
+    await tester.tap(find.text('Add').last);
+    await tester.pump();
+
+    await tester.tap(find.byTooltip('Open cart'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Total: Rs 200'), findsOneWidget); // 80 + 80 + 40
+
+    await tester.tap(find.byIcon(Icons.remove_circle_outline).first);
+    await tester.pump();
+
+    expect(find.text('Total: Rs 120'), findsOneWidget);
+  });
 }
