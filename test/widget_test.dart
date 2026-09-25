@@ -29,4 +29,15 @@ void main() {
     expect(cart.count, 1);
     expect(cart.total, 80);
   });
+
+  testWidgets('the badge counts plates as they are added', (tester) async {
+    await tester.pumpWidget(const ShopApp(dishes: _dishes));
+    expect(find.text('2'), findsNothing);
+
+    await tester.tap(find.text('Add').first);
+    await tester.tap(find.text('Add').last);
+    await tester.pump();
+
+    expect(find.text('2'), findsOneWidget); // badge, redrawn by context.watch
+  });
 }

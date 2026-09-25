@@ -13,7 +13,10 @@ class MenuPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Desi Corner')),
+      appBar: AppBar(
+        title: const Text('Desi Corner'),
+        actions: const [CartBadge()],
+      ),
       body: ListView.builder(
         itemCount: dishes.length,
         itemBuilder: (context, index) {
@@ -29,6 +32,27 @@ class MenuPage extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// The cart icon with a number on it. It uses context.watch, so it redraws
+/// by itself every time the cart changes.
+class CartBadge extends StatelessWidget {
+  const CartBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // watch = "redraw me whenever this changes". Use it inside build().
+    final count = context.watch<CartModel>().count;
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 12),
+      child: Badge(
+        isLabelVisible: count > 0,
+        label: Text('$count'),
+        child: const Icon(Icons.shopping_cart_outlined),
       ),
     );
   }
