@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'features/shop/data/menu_repository.dart';
 import 'features/shop/models/dish.dart';
+import 'features/shop/pages/menu_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,10 +21,7 @@ class ShopApp extends StatelessWidget {
       title: 'Desi Corner',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange)),
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Desi Corner')),
-        body: Center(child: Text('Menu loaded: ${dishes.length} dishes')),
-      ),
+      home: MenuPage(dishes: dishes),
     );
   }
 }
