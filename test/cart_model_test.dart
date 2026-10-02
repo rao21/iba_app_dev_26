@@ -38,4 +38,15 @@ void main() {
 
     expect(notified, 2);
   });
+
+  test('quantityOf and clear', () {
+    final cart = CartModel()..add(chai)..add(chai)..add(samosa);
+
+    expect(cart.quantityOf(chai), 2);
+    expect(cart.quantityOf(samosa), 1);
+
+    cart.clear();
+    expect(cart.count, 0);
+    expect(cart.quantityOf(chai), 0);
+  });
 }

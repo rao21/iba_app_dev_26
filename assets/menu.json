@@ -1,53 +1,54 @@
 [
   {
     "id": 1,
-    "name": "Biryani",
-    "price": 350,
-    "emoji": "🍛"
+    "name": "Margherita Pizza",
+    "price": 700,
+    "emoji": "🍕",
+    "image": "https://images.pexels.com/photos/1435907/pexels-photo-1435907.jpeg?auto=compress&cs=tinysrgb&w=600"
   },
   {
     "id": 2,
-    "name": "Nihari",
-    "price": 420,
-    "emoji": "🍲"
-  },
-  {
-    "id": 3,
-    "name": "Samosa",
-    "price": 40,
-    "emoji": "🥟"
-  },
-  {
-    "id": 4,
-    "name": "Burger",
-    "price": 280,
+    "name": "Classic Burger",
+    "price": 450,
     "emoji": "🍔",
     "image": "https://images.pexels.com/photos/4315148/pexels-photo-4315148.jpeg?auto=compress&cs=tinysrgb&w=600"
   },
   {
-    "id": 5,
-    "name": "Chai",
-    "price": 80,
-    "emoji": "☕"
-  },
-  {
-    "id": 6,
-    "name": "Lassi",
-    "price": 120,
-    "emoji": "🥛"
-  },
-  {
-    "id": 7,
+    "id": 3,
     "name": "Seafood Pasta",
     "price": 650,
     "emoji": "🍝",
     "image": "https://images.pexels.com/photos/31235407/pexels-photo-31235407.jpeg?auto=compress&cs=tinysrgb&w=600"
   },
   {
-    "id": 8,
+    "id": 4,
     "name": "Club Sandwich",
-    "price": 450,
+    "price": 400,
     "emoji": "🥪",
     "image": "https://images.pexels.com/photos/6416558/pexels-photo-6416558.jpeg?auto=compress&cs=tinysrgb&w=600"
+  },
+  {
+    "id": 5,
+    "name": "Crispy Fries",
+    "price": 200,
+    "emoji": "🍟"
+  },
+  {
+    "id": 6,
+    "name": "Chicken Wings",
+    "price": 550,
+    "emoji": "🍗"
+  },
+  {
+    "id": 7,
+    "name": "Iced Coffee",
+    "price": 250,
+    "emoji": "🧋"
+  },
+  {
+    "id": 8,
+    "name": "Chocolate Brownie",
+    "price": 300,
+    "emoji": "🍫"
   }
 ]

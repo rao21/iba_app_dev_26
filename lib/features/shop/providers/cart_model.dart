@@ -17,6 +17,9 @@ class CartModel extends ChangeNotifier {
   int get total =>
       _items.entries.fold(0, (sum, e) => sum + e.key.price * e.value);
 
+  // How many of this one dish are in the cart (0 if none).
+  int quantityOf(Dish dish) => _items[dish] ?? 0;
+
   void add(Dish dish) {
     _items[dish] = (_items[dish] ?? 0) + 1;
     notifyListeners(); // <- the whole point of ChangeNotifier
@@ -30,6 +33,12 @@ class CartModel extends ChangeNotifier {
     } else {
       _items[dish] = qty - 1;
     }
+    notifyListeners();
+  }
+
+  // Order placed: empty the cart.
+  void clear() {
+    _items.clear();
     notifyListeners();
   }
 }

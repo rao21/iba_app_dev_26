@@ -1,4 +1,3 @@
-/// One dish on the menu. It never changes, so every field is final.
 class Dish {
   const Dish({
     required this.id,
@@ -12,9 +11,8 @@ class Dish {
   final String name;
   final int price;
   final String emoji;
-  final String? image; // photo link, optional
+  final String? image; 
 
-  // Turns one JSON object from menu.json into a Dish.
   factory Dish.fromJson(Map<String, dynamic> json) => Dish(
         id: json['id'] as int,
         name: json['name'] as String,
