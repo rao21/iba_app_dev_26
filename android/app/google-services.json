@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "485132827111",
+    "project_id": "ibacourse-d90db",
+    "storage_bucket": "ibacourse-d90db.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:485132827111:android:a5e055098612a3c1c2e542",
+        "android_client_info": {
+          "package_name": "com.example.iba_app_dev_26"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "485132827111-ufvtion2hi32iduaup9l99mos988fjrn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUk13Tt8SrynVPnLF_raR82q7o1Q8aeOQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "485132827111-lfd58gbcj8kq262r5suqqvctj4fp4qnb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "485132827111-334cqrfcm9ma3q3dq7avnjpicocg6104.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.ibaAppDev26"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:485132827111:android:4cc349f6ec6bceedc2e542",
+        "android_client_info": {
+          "package_name": "com.example.iba_course"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "485132827111-7itp55k6cs120644to2rehotjbf70dkq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.iba_course",
+            "certificate_hash": "85e6ceaeb808221e0431e16d6b2209091f775a5e"
+          }
+        },
+        {
+          "client_id": "485132827111-ufvtion2hi32iduaup9l99mos988fjrn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUk13Tt8SrynVPnLF_raR82q7o1Q8aeOQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "485132827111-lfd58gbcj8kq262r5suqqvctj4fp4qnb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "485132827111-334cqrfcm9ma3q3dq7avnjpicocg6104.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.ibaAppDev26"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
