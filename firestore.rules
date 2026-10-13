@@ -2,10 +2,14 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // This lecture's Todo app has no login yet, so "anyone with the app"
-    // is the only audience — open read/write on just this collection,
-    // nothing else in the project.
+    // Neither the Todo app nor the Notes app has login yet, so "anyone
+    // with the app" is the only audience — open read/write on just these
+    // two collections, nothing else in the project.
     match /todos/{todoId} {
+      allow read, write: if true;
+    }
+
+    match /notes/{noteId} {
       allow read, write: if true;
     }
   }
