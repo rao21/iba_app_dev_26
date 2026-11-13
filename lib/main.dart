@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'features/posts/injector.dart';
-import 'features/posts/presentation/pages/posts_page.dart';
+import 'features/product_explorer/bloc/product_bloc.dart';
+import 'features/product_explorer/bloc/product_event.dart';
+import 'features/product_explorer/cubit/favorites_cubit.dart';
+import 'features/product_explorer/pages/splash_page.dart';
+import 'features/product_explorer/services/api_service.dart';
+import 'features/product_explorer/widgets/product_card.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,15 +17,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Posts',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF2F6F5E),
-        scaffoldBackgroundColor: const Color(0xFFF6F8F7),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => ProductBloc(ApiService())..add(const LoadProducts()),
+        ),
+        BlocProvider(create: (context) => FavoritesCubit()),
+      ],
+      child: MaterialApp(
+        title: 'Product Explorer',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          useMaterial3: true,
+          colorSchemeSeed: kAccent,
+          scaffoldBackgroundColor: kBackground,
+          fontFamily: 'Roboto',
+        ),
+        home: const SplashPage(),
       ),
-      home: PostsPage(getPosts: buildGetPosts()),
     );
   }
 }
